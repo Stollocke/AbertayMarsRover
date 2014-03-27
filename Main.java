@@ -3,8 +3,9 @@ public class Main {
         
         Rover rover = new Rover();
         
-        rover.prepareExploration();
+        rover.startMission();
         rover.mainBehaviour();
+        rover.finishMission();
         
     }
 }

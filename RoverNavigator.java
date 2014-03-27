@@ -81,8 +81,8 @@ public class RoverNavigator {
         // or when the driving unit has stopped moving
         boolean shouldStop = false;
         do {
+            shouldStop = this.instrumentsUnit.obstacleAhead();
             Delay.msDelay(10);
-            shouldStop = (this.instrumentsUnit.obstacleAhead() || Button.ENTER.isDown()) ? true : false;
             
         } while(this.driveUnit.isMoving() && !shouldStop);
         
@@ -107,7 +107,7 @@ public class RoverNavigator {
         double currentHeading = (double) this.getHeading();
         double neededRotation = currentHeading - targetHeading;
         
-        return this.driveUnit.rotate(neededRotation) ? true : false;
+        return this.rotateByAngle(neededRotation) ? true : false;
     }
     
     /**
@@ -117,9 +117,22 @@ public class RoverNavigator {
     * @return void
     */
     public boolean rotateByAngle(double offsetAngle) {
-        this.driveUnit.rotate(offsetAngle);
-        // TODO: implement a bumpers-only obstacleAhead
-        return true;
+        this.driveUnit.rotate(offsetAngle, true);
+        // check for obstacles as we turn
+        boolean shouldStop = false;
+        do {
+            Delay.msDelay(10);
+            shouldStop = this.instrumentsUnit.bumpersTriggered();
+        } while(this.driveUnit.isMoving() && !shouldStop);
+        
+        // return true or false depending on the reason for stopping
+        if(shouldStop) {
+            this.driveUnit.stop();
+            return false;
+        }
+        else {
+            return true;
+        }
     }
     
     /**

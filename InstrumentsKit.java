@@ -76,7 +76,7 @@ public class InstrumentsKit {
     */
     public boolean obstacleInRange() {
         int distance = this.mastSonic.getDistance();
-        return distance < this.safetyDistance ? true : false;
+        return (distance < this.safetyDistance) ? true : false;
     }
     
     /**
