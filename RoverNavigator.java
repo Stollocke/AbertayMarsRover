@@ -59,9 +59,12 @@ public class RoverNavigator {
         float distance = this.poseProvider.getPose().distanceTo(targetPoint);
         
         // rotate the rover and launch the drive sequence
-        this.rotateByAngle(bearing);
-        boolean success = this.travelDistance(distance);
-        return success;
+        if(this.rotateByAngle(bearing)) {
+            return this.travelDistance(distance);
+        }
+        else {
+            return false;
+        }
     }
     
     /**
