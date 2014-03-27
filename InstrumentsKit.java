@@ -14,6 +14,15 @@ public class InstrumentsKit {
     
     private Rover rover;
     
+    /**
+    * Constructor
+    * Assigns the different sensors to their instance variables
+    *
+    * @param NXTRegulatedMotor headMotor the motor controlling the sensors' rotation
+    * @param UltrasonicSensor headSonic the US Sensor mounted on the rotating head
+    * @param TouchSensor leftBumper the bumper located on the front left of the rover
+    * @param TouchSensor rightBumper the bumper located on the front right of the rover
+    */
     public InstrumentsKit(NXTRegulatedMotor headMotor, UltrasonicSensor headSonic, TouchSensor leftBumper, TouchSensor rightBumper) {
         
         this.mastMotor = headMotor;
@@ -35,7 +44,7 @@ public class InstrumentsKit {
         this.mastMotor.resetTachoCount();
         this.mastMotor.setSpeed(90);
         
-        Soud.beepSequenceUp();
+        Sound.beepSequenceUp();
         Delay.msDelay(1000);
         
         this.safetyDistance = 10;
@@ -53,26 +62,40 @@ public class InstrumentsKit {
     
     /**
     * Tells if there is a collision risk
-    * If the collision warning was triggered by front bumpers, tells which side
     *
     * @return boolean true if there is a collision risk, false otherwise
     */
     public boolean obstacleAhead() {
+        return (this.obstacleInRange() || this.bumpersTriggered()) ? true : false;
+    }
+    
+    /**
+    * Checks for a possible obstacle using the US sensor
+    *
+    * @return boolean true if there is an obstacle in safety range
+    */
+    public boolean obstacleInRange() {
         int distance = this.mastSonic.getDistance();
-        
+        return distance < this.safetyDistance ? true : false;
+    }
+    
+    /**
+    * Tells if the bumpers detected a collision
+    *
+    * @return boolean true if one of the bumpers was triggered
+    */
+    public boolean bumpersTriggered() {
         boolean leftBump = this.leftBumperSensor.isPressed();
         boolean rightBump = this.rightBumperSensor.isPressed();
         
-        if(distance < this.safetyDistance || leftBump || rightBump) {
-            if(leftBump || rightBump) {
-                this.lastBump = leftBump ? -1 : 1;
-            }
-            else {
-                this.lastBump = 0;
-            }
+        if(leftBump || rightBump) {
+            this.lastBump = leftBump ? -1 : 1;
             return true;
         }
-        return false;
+        else {
+            this.lastBump = 0;
+            return false;
+        }
     }
     
     /**
@@ -83,7 +106,7 @@ public class InstrumentsKit {
     public int bestForwardAngle() {
         
         int bestAngle = 0;
-        int bestDistance = 0;
+        double bestDistance = 0;
         
         for (int i=-90; i <= 90; i+=20) {
             this.setMastAngle(i);

@@ -25,6 +25,13 @@ public class RoverNavigator {
     
     private Rover rover;
     
+    /**
+    * Constructor
+    * Takes control of the Instruments Unit and the Drive Unit
+    *
+    * @param DifferentialPilot pilot the Differential drive unit used to control the rover
+    * @param InstrumentKit mast the rover's sensors array
+    */
     public RoverNavigator(DifferentialPilot pilot, InstrumentsKit mast) {
         
         this.driveUnit = pilot;
@@ -93,14 +100,14 @@ public class RoverNavigator {
     * Rotate the rover to an absolute angle relative to the coordinate system
     *
     * @param double targetHeading the absolute angle (0 is along x, +90 along y)
-    * @return void
+    * @return boolean true if the targetHeading was reached, false otherwise
     */
-    public void setHeading(double targetHeading) {
+    public boolean setHeading(double targetHeading) {
         
         double currentHeading = (double) this.getHeading();
         double neededRotation = currentHeading - targetHeading;
         
-        this.driveUnit.rotate(neededRotation);
+        return this.driveUnit.rotate(neededRotation) ? true : false;
     }
     
     /**
@@ -109,8 +116,10 @@ public class RoverNavigator {
     * @param double targetAngle the absolute angle (0 is along x, +90 along y)
     * @return void
     */
-    public void rotateByAngle(double offsetAngle) {
+    public boolean rotateByAngle(double offsetAngle) {
         this.driveUnit.rotate(offsetAngle);
+        // TODO: implement a bumpers-only obstacleAhead
+        return true;
     }
     
     /**

@@ -18,7 +18,6 @@ public class Rover implements ButtonListener {
     
     /**
     * Constructor
-    *
     * Creates the object, and sets up all units necessary for driving
     */
     public Rover() {
@@ -48,7 +47,7 @@ public class Rover implements ButtonListener {
     * 
     * @return void
     */
-    public void prepareExploration() {
+    public void startMission() {
         
     }
     
@@ -59,6 +58,15 @@ public class Rover implements ButtonListener {
     */
     public void mainBehaviour() {
         
+    }
+    
+    /**
+    * Mission wrap-up method
+    *
+    * @return void
+    */
+    public void finishMission() {
+    
     }
     
     /*
