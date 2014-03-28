@@ -23,13 +23,15 @@ public class InstrumentsKit {
     * @param TouchSensor leftBumper the bumper located on the front left of the rover
     * @param TouchSensor rightBumper the bumper located on the front right of the rover
     */
-    public InstrumentsKit(NXTRegulatedMotor headMotor, UltrasonicSensor headSonic, TouchSensor leftBumper, TouchSensor rightBumper) {
+    public InstrumentsKit(NXTRegulatedMotor headMotor, UltrasonicSensor headSonic, TouchSensor leftBumper, TouchSensor rightBumper, Rover roverObject) {
         
         this.mastMotor = headMotor;
         this.mastSonic = headSonic;
         
         this.leftBumperSensor = leftBumper;
         this.rightBumperSensor = rightBumper;
+        
+        this.rover = roverObject;
         
         this.lastBump = 0;
         
@@ -48,16 +50,6 @@ public class InstrumentsKit {
         Delay.msDelay(1000);
         
         this.safetyDistance = 10;
-    }
-    
-    /**
-    * Sets the main rover controller reference for the class
-    * 
-    * @param Object roverObject the instance of the main Rover Controller
-    * @return void
-    */
-    public void setRoverObject(Rover roverObject) {
-        this.rover = roverObject;
     }
     
     /**

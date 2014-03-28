@@ -28,9 +28,9 @@ public class Rover implements ButtonListener {
         TouchSensor right = new TouchSensor(SensorPort.S2);
         
         // instantiate elementary rover units
-        this.sensorUnit = new InstrumentsKit(Motor.B, sonic, left, right);
+        this.sensorUnit = new InstrumentsKit(Motor.B, sonic, left, right, this);
         this.driveUnit = new DifferentialPilot(4.2f, 16.8f, Motor.A, Motor.C, true);
-        this.navigationUnit = new AdvancedRoverNavigator(this.driveUnit, this.sensorUnit);
+        this.navigationUnit = new AdvancedRoverNavigator(this.driveUnit, this.sensorUnit, this);
         
         // link this to the Instrumentations and Navigation Units
         this.sensorUnit.setRoverObject(this);

@@ -32,14 +32,22 @@ Interface method. It provides the different units of the rover (mapping, navigat
 
 _`AdvancedRoverNavigator` provides an easy way of moving the rover towards a point on a coordinate system, move it along a path, and orientating it. Once the `AdvancedRoverNavigator` class is instantiated, any motion of the rover will be registered, and the position updated._
 
-#### `new AdvancedRoverNavigator(DifferentialPilot pilot, InstrumentsKit mast)`
+#### `new AdvancedRoverNavigator(DifferentialPilot pilot, InstrumentsKit mast, Rover roverObject)`
 
-The constructor creates the Navigator object and registers the rover's instrument array and driving unit, so that it can use them.
+The constructor creates the Navigator object and registers the rover's instrument array and driving unit, so that it can use them. The roverObject parameter should point to the main Rover class controlling the robot.
 
-#### boolean `moveToPoint(float x, float y)`
+#### boolean `goTo(float x, float y)`
 
 Attempts to make the rover reach the point defined by `x,y`. The position of `0,0` is determined by the starting position of the rover. If the point is reached, the function will return true. If the rover was stopped by an obstacle, it will return false.
 
-#### boolean `setHeading(double targetHeading)`
+#### boolean `rotateTo(double targetHeading)`
 
 Attempts to make the rover face the give heading. (0/360 being the direction the rover was facing at the beginning of the mission). If the motion was successful, returns true. If the rover was stopped, return false.
+
+#### boolean `rotateBy(double offsetAngle)`
+
+Attempts to rotate the rover by the given angle, relative to its current direction. Negative angles are to the left, positive to the right. Returns true if the rotation was successful, and false if the rover was stopped.
+
+#### boolean `travelDistance(double targetDistance)`
+
+Attempts to move the rover by the given distance. Returns true if the distance was travelled, false if the rover was stopped

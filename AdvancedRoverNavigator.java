@@ -23,8 +23,8 @@ public class AdvancedRoverNavigator extends RoverNavigator {
     private Point nextPoint;
     
     
-    public AdvancedRoverNavigator(DifferentialPilot pilot, InstrumentsKit mast) {
-        super(pilot, mast);
+    public AdvancedRoverNavigator(DifferentialPilot pilot, InstrumentsKit mast, Rover roverObject) {
+        super(pilot, mast, roverObject);
         path = new LinkedList<Point>();
     }
     
@@ -70,7 +70,7 @@ public class AdvancedRoverNavigator extends RoverNavigator {
             
             Point target = pathArray[i];
             
-            if(!this.moveToPoint((float)target.getX(), (float)target.getY())) {
+            if(!this.goTo((float)target.getX(), (float)target.getY())) {
                 return false;
             }
             else {

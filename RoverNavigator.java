@@ -32,10 +32,11 @@ public class RoverNavigator {
     * @param DifferentialPilot pilot the Differential drive unit used to control the rover
     * @param InstrumentKit mast the rover's sensors array
     */
-    public RoverNavigator(DifferentialPilot pilot, InstrumentsKit mast) {
+    public RoverNavigator(DifferentialPilot pilot, InstrumentsKit mast, Rover roverObject) {
         
         this.driveUnit = pilot;
         this.instrumentsUnit = mast;
+        this.rover = roverObject;
         
         this.poseProvider = new OdometryPoseProvider(this.driveUnit);
         
@@ -51,7 +52,7 @@ public class RoverNavigator {
     * @param float y the Y coordinate of the target point
     * @return boolean true if the rover reached the points, false if it was stopped
     */
-    public boolean moveToPoint(float x, float y) {
+    public boolean goTo(float x, float y) {
         
         // get the relative bearing and distance to the target point
         Point targetPoint = new Point(x, y);
@@ -59,7 +60,7 @@ public class RoverNavigator {
         float distance = this.poseProvider.getPose().distanceTo(targetPoint);
         
         // rotate the rover and launch the drive sequence
-        if(this.rotateByAngle(bearing)) {
+        if(this.rotateBy(bearing)) {
             return this.travelDistance(distance);
         }
         else {
@@ -105,12 +106,12 @@ public class RoverNavigator {
     * @param double targetHeading the absolute angle (0 is along x, +90 along y)
     * @return boolean true if the targetHeading was reached, false otherwise
     */
-    public boolean setHeading(double targetHeading) {
+    public boolean rotateTo(double targetHeading) {
         
         double currentHeading = (double) this.getHeading();
         double neededRotation = currentHeading - targetHeading;
         
-        return this.rotateByAngle(neededRotation) ? true : false;
+        return this.rotateBy(neededRotation) ? true : false;
     }
     
     /**
@@ -119,7 +120,7 @@ public class RoverNavigator {
     * @param double targetAngle the absolute angle (0 is along x, +90 along y)
     * @return void
     */
-    public boolean rotateByAngle(double offsetAngle) {
+    public boolean rotateBy(double offsetAngle) {
         this.driveUnit.rotate(offsetAngle, true);
         // check for obstacles as we turn
         boolean shouldStop = false;
@@ -172,15 +173,5 @@ public class RoverNavigator {
     */
     public String toString() {
         return "X: "+(int)this.getX()+", Y: "+(int)this.getY()+", Hdg: "+(int)this.getHeading();
-    }
-    
-    /**
-    * Sets the main rover controller reference for the class
-    * 
-    * @param Object roverObject the instance of the main Rover Controller
-    * @return void
-    */
-    public void setRoverObject(Rover roverObject) {
-        this.rover = roverObject;
     }
 }
