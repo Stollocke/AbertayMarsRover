@@ -32,10 +32,6 @@ public class Rover implements ButtonListener {
         this.driveUnit = new DifferentialPilot(4.2f, 16.8f, Motor.A, Motor.C, true);
         this.navigationUnit = new AdvancedRoverNavigator(this.driveUnit, this.sensorUnit, this);
         
-        // link this to the Instrumentations and Navigation Units
-        this.sensorUnit.setRoverObject(this);
-        this.navigationUnit.setRoverObject(this);
-        
         // drive unit settings
         this.driveUnit.setTravelSpeed(20);
         this.driveUnit.setRotateSpeed(30);
