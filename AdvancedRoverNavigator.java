@@ -61,33 +61,21 @@ public class AdvancedRoverNavigator extends RoverNavigator {
     */
     public boolean followPath() {
         
-        LCD.drawString("Waypoints: "+this.path.size(),0,4);
-        
+        // copy the list of waypoints to an array, and iterate over it
         Point[] pathArray = this.path.toArray(new Point[this.path.size()]);
-        
-        // iterate over the path queue
         for(int i = 0; i < pathArray.length; i++) {
             
             Point target = pathArray[i];
-            
             if(!this.goTo((float)target.getX(), (float)target.getY())) {
                 return false;
             }
             else {
                 // the waypoint was reached, remove it from the list
                 this.path.remove(target);
-                LCD.drawString(this.toString(),0,0);
             }
         }
         // if the path was empty, return true
         return true;
-    }
-    
-    /**
-    * @return the next waypoint on the path
-    */
-    public Point getNextWayPoint() {
-        return new Point(0.0f, 0.0f);
     }
     
 }

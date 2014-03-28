@@ -9,7 +9,7 @@ public class InstrumentsKit {
     private TouchSensor leftBumperSensor;
     private TouchSensor rightBumperSensor;
     
-    private int lastBump;
+    public int lastBump;
     private int safetyDistance;
     
     private Rover rover;

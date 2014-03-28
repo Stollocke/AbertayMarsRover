@@ -1,8 +1,6 @@
-# Abertay Mars Rover
+# Abertay Mars Rover Documentation
 
-## Documentation
-
-### class `Rover`
+# class `Rover`
 
 _The `Rover` class is the main controller of the mission. It provides abstraction for the main program, exposing uniquely main phases of the mission_
 
@@ -27,8 +25,9 @@ Empty method, called by the `Main` program once `mainBehaviour` has returned. It
 Interface method. It provides the different units of the rover (mapping, navigation, instrumentation) with a centralised way to display messages on the LCD screen. [Ultimately, should be able to handle a queue of messages.]
 
 ***
+# Abertay Mars Rover Documentation
 
-### class `AdvancedRoverNavigator`
+# class `AdvancedRoverNavigator`
 
 _`AdvancedRoverNavigator` provides an easy way of moving the rover towards a point on a coordinate system, move it along a path, and orientating it. Once the `AdvancedRoverNavigator` class is instantiated, any motion of the rover will be registered, and the position updated._
 
@@ -52,21 +51,33 @@ Attempts to rotate the rover by the given angle, relative to its current directi
 
 Attempts to move the rover by the given distance. Returns true if the distance was travelled, false if the rover was stopped
 
-
-#### Point `getNextWaypoint()`
-
-returns a `Point` object with the x and y values set to the next waypoint on the rover's path.
-
 #### `getX()/getY()/getHeading()`
 
 Allow access to the position and orientation variables of the navigation unit.
 
 ***
+# Abertay Mars Rover Documentation
 
-### class `InstrumentsKit`
+# class `InstrumentsKit`
 
 _`InstrumentsKit` provides abstraction for the different sensors mounted on the rover: US on a rotating mast, two touch sensors as bumpers._
 
 #### `new InstrumentsKit(NXTRegulatedMotor headMotor, UltrasonicSensor headSonic, TouchSensor leftBumper, TouchSensor rightBumper, Rover roverObject)`
 
 creates the InstrumentsKit instance.
+
+#### boolean `obstacleInRange()`
+
+Returns true if any obstacle is closer to the rover than the safety range (10cm, checked using the Ultrasonic sensor).
+
+#### boolean `bumpersTriggered()`
+
+Returns true if either one of the bumper's touch sensors is detecting contact. If there is a contact, InstrumentsKit.lastBump will be set to -1 (left) or 1 (right). It will be set to 0 otherwise.
+
+#### boolean `obstacleAhead()`
+
+Returns true if the bumpers and/or the ultrasonic range are triggered.
+
+#### int `bestForwardAngle()`
+
+Make a full sweep between -90 and 90 degrees, measuring the headway every 20 degrees. Returns the bearing where there's the most headroom.
