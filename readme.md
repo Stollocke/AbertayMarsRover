@@ -51,3 +51,22 @@ Attempts to rotate the rover by the given angle, relative to its current directi
 #### boolean `travelDistance(double targetDistance)`
 
 Attempts to move the rover by the given distance. Returns true if the distance was travelled, false if the rover was stopped
+
+
+#### Point `getNextWaypoint()`
+
+returns a `Point` object with the x and y values set to the next waypoint on the rover's path.
+
+#### `getX()/getY()/getHeading()`
+
+Allow access to the position and orientation variables of the navigation unit.
+
+***
+
+### class `InstrumentsKit`
+
+_`InstrumentsKit` provides abstraction for the different sensors mounted on the rover: US on a rotating mast, two touch sensors as bumpers._
+
+#### `new InstrumentsKit(NXTRegulatedMotor headMotor, UltrasonicSensor headSonic, TouchSensor leftBumper, TouchSensor rightBumper, Rover roverObject)`
+
+creates the InstrumentsKit instance.

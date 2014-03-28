@@ -86,7 +86,7 @@ public class AdvancedRoverNavigator extends RoverNavigator {
     /**
     * @return the next waypoint on the path
     */
-    public Point nextWayPoint() {
+    public Point getNextWayPoint() {
         return new Point(0.0f, 0.0f);
     }
     
