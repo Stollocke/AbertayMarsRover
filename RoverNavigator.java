@@ -3,6 +3,7 @@ import lejos.geom.Point;
 import lejos.robotics.navigation.*;
 import lejos.robotics.localization.OdometryPoseProvider;
 import lejos.util.*;
+import java.util.*;
 
 /**
 * Abertay University - SET
@@ -15,15 +16,15 @@ import lejos.util.*;
 */
 public class RoverNavigator {
     
-    private DifferentialPilot driveUnit;
-    private InstrumentsKit instrumentsUnit;
+    private LinkedList<Point> path;
+    private Point nextPoint;
     
-    private OdometryPoseProvider poseProvider;
+    protected DifferentialPilot driveUnit;
+    protected InstrumentsKit instrumentsUnit;
     
-    private float targetX;
-    private float targetY;
+    protected OdometryPoseProvider poseProvider;
     
-    private Rover rover;
+    protected Rover rover;
     
     /**
     * Constructor
@@ -40,8 +41,7 @@ public class RoverNavigator {
         
         this.poseProvider = new OdometryPoseProvider(this.driveUnit);
         
-        this.targetX = 0.0f;
-        this.targetY = 0.0f;
+        path = new LinkedList<Point>();
         
     }
     
@@ -121,7 +121,9 @@ public class RoverNavigator {
     * @return void
     */
     public boolean rotateBy(double offsetAngle) {
-        this.driveUnit.rotate(offsetAngle, true);
+        // turn drift correction
+        double realAngle = offsetAngle < 0.0 ? offsetAngle + 0 : offsetAngle - 0;
+        this.driveUnit.rotate(realAngle, true);
         // check for obstacles as we turn
         boolean shouldStop = false;
         do {
@@ -173,5 +175,60 @@ public class RoverNavigator {
     */
     public String toString() {
         return "X: "+(int)this.getX()+", Y: "+(int)this.getY()+", Hdg: "+(int)this.getHeading();
+    }
+    
+    /*
+    ##############################
+    Advanced functions
+    */
+    
+    /**
+    * Adds a new waypoint at the end of the path
+    *
+    * @param float x new waypoint's x coordinate
+    * @param float y new waypoint's y coordinate
+    */
+    public void addWaypoint(float x, float y) {
+        
+        Point newPoint = new Point(x, y);
+        //insert the point at the very end of the list
+        this.path.add(newPoint);
+    }
+    
+    
+    /**
+    * Fushes the path of the rover
+    *
+    * @return void
+    */
+    public void clearPath() {
+        this.path.clear();
+    }
+    
+    /**
+    * Commands the rover to follow the path in memory
+    * The rover will go on until an obstacle is encountered
+    * In that case, the rest of the path will stay in memory.
+    *
+    * @return boolean true if the last point was reached, false otherwise
+    */
+    public boolean followPath() {
+        
+        // copy the list of waypoints to an array, and iterate over it
+        Point[] pathArray = this.path.toArray(new Point[this.path.size()]);
+        for(int i = 0; i < pathArray.length; i++) {
+            
+            Point target = pathArray[i];
+            if(!this.goTo((float)target.getX(), (float)target.getY())) {
+                return false;
+            }
+            else {
+                // the waypoint was reached, remove it from the list
+                this.rover.arrivedAtWaypoint();
+                this.path.remove(target);
+            }
+        }
+        // if the path was empty, return true
+        return true;
     }
 }

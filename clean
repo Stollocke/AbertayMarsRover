@@ -1,0 +1,4 @@
+clear
+echo "Clearing build files"
+rm ./*.class > /dev/null
+rm ./*.nxj > /dev/null

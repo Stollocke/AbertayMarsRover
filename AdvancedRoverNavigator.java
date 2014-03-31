@@ -1,5 +1,4 @@
 import java.util.*;
-
 import lejos.nxt.*;
 import lejos.geom.Point;
 import lejos.robotics.navigation.*;
@@ -71,6 +70,7 @@ public class AdvancedRoverNavigator extends RoverNavigator {
             }
             else {
                 // the waypoint was reached, remove it from the list
+                this.rover.arrivedAtWaypoint();
                 this.path.remove(target);
             }
         }

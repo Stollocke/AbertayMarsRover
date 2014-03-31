@@ -44,12 +44,12 @@ public class InstrumentsKit {
         // and makes sure it isn't nudged by the cables
         this.mastMotor.stop();
         this.mastMotor.resetTachoCount();
-        this.mastMotor.setSpeed(90);
+        this.mastMotor.setSpeed(180);
         
         Sound.beepSequenceUp();
         Delay.msDelay(1000);
         
-        this.safetyDistance = 10;
+        this.safetyDistance = 20;
     }
     
     /**
@@ -80,14 +80,29 @@ public class InstrumentsKit {
         boolean leftBump = this.leftBumperSensor.isPressed();
         boolean rightBump = this.rightBumperSensor.isPressed();
         
-        if(leftBump || rightBump) {
+        if((leftBump && !rightBump) || (rightBump && !leftBump)) {
             this.lastBump = leftBump ? -1 : 1;
+            return true;
+        }
+        else if (leftBump || rightBump) {
+            this.lastBump = 2;
             return true;
         }
         else {
             this.lastBump = 0;
             return false;
         }
+    }
+    
+    /**
+    * returns the distance ahead using teh US sensor
+    *
+    * @return int the distance
+    */
+    public int distanceAhead() {
+        this.setMastAngle(0);
+        int distance = this.mastSonic.getDistance();
+        return distance;
     }
     
     /**
