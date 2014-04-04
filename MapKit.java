@@ -40,9 +40,12 @@ public class MapKit {
     * @param float distance at which the obstacle was detected
     * @return void
     */
-    public void addObstacle(int bearing, float distance) {
-        Pose currentPosition = new Pose(rover.getX(), rover.getY(), rover.getHeading());
-        Point obstacle = currentPosition.pointAt(distance, (float) bearing);
+    public void addObstacle(int heading, float distance) {
+        Pose currentPosition = this.rover.navigationUnit.getPose();
+        
+        float bearing = (currentPosition.getHeading() + (float)heading) % 360;
+        
+        Point obstacle = currentPosition.pointAt(distance, bearing);
         this.pointsMap.add(obstacle);
     }
     

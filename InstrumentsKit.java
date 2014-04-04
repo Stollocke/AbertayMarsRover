@@ -37,6 +37,7 @@ public class InstrumentsKit {
         
         // mast motor initialisation
         // wait for the user to put the mast in the right position
+        this.mastMotor.flt(true);
         this.rover.displayUserMessage("Position Sensor Head");
         Button.ENTER.waitForPressAndRelease();
         // issue a stop command to the motor
@@ -44,7 +45,7 @@ public class InstrumentsKit {
         // and makes sure it isn't nudged by the cables
         this.mastMotor.stop();
         this.mastMotor.resetTachoCount();
-        this.mastMotor.setSpeed(180);
+        this.mastMotor.setSpeed(90);
         
         Sound.beepSequenceUp();
         Delay.msDelay(1000);
@@ -110,22 +111,20 @@ public class InstrumentsKit {
     *
     * @return int the relative angle between the current and desired direction (clockwise)
     */
-    public int bestForwardAngle() {
+    public int[][] forwardSweep() {
         
-        int bestAngle = 0;
-        double bestDistance = 0;
+        int[][] distances = new int[19][2];
+        int j = 0;
         
-        for (int i=-90; i <= 90; i+=20) {
+        for (int i=-90; i <= 90; i+=10) {
             this.setMastAngle(i);
-            double dist = (double) this.mastSonic.getDistance();
-            if(dist >= bestDistance) {
-                bestAngle = i;
-                bestDistance = dist;
-            }
-            Delay.msDelay(500);
+            distances[j][0] = -this.mastMotor.getPosition();
+            distances[j][1] = this.mastSonic.getDistance();
+            Delay.msDelay(50);
+            j++;
         }
         this.setMastAngle(0);
-        return bestAngle;
+        return distances;
     }
     
     /**

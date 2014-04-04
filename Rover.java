@@ -4,13 +4,13 @@ import lejos.robotics.localization.*;
 import lejos.util.*;
 import lejos.geom.Point;
 import java.io.*;
+import java.util.*;
 
 /**
 * Rover class
 * Main controller, keeps track of all the sensors and navigation arrays
 * 
 */
-
 public class Rover implements ButtonListener {
     
     public DifferentialPilot driveUnit;
@@ -18,14 +18,17 @@ public class Rover implements ButtonListener {
     public InstrumentsKit sensorUnit;
     public MapKit mappingUnit;
     
+    private int startTime;
+    private ArrayList<Point> followedPath;
+    
     /**
     * Constructor
     * Creates the object, and sets up all units necessary for driving
     */
     public Rover() {
-        Sound.setVolume(60);
+        Sound.setVolume(10);
         // instantiate sensor objects
-        UltrasonicSensor sonic = new UltrasonicSensor(SensorPort.S3);
+        UltrasonicSensor sonic = new UltrasonicSensor(SensorPort.S4);
         TouchSensor left = new TouchSensor(SensorPort.S1);
         TouchSensor right = new TouchSensor(SensorPort.S2);
         
@@ -34,17 +37,17 @@ public class Rover implements ButtonListener {
         
         // instantiate elementary rover units
         this.sensorUnit = new InstrumentsKit(Motor.B, sonic, left, right, this);
-        this.driveUnit = new DifferentialPilot(4.2f, 16.8f, Motor.A, Motor.C, true);
+        this.driveUnit = new DifferentialPilot(4.32f, 16.8f, Motor.A, Motor.C, true);
         this.navigationUnit = new RoverNavigator(this.driveUnit, this.sensorUnit, this);
         this.mappingUnit = new MapKit(this);
+        this.followedPath = new ArrayList<Point>();
         
         // drive unit settings
-        this.driveUnit.setTravelSpeed(20);
+        this.driveUnit.setTravelSpeed(15);
         this.driveUnit.setRotateSpeed(45);
         
         Button.ESCAPE.addButtonListener(this);
     }
-    
     
     /**
     * Method to call before starting exploration
@@ -52,7 +55,10 @@ public class Rover implements ButtonListener {
     * @return void
     */
     public void startMission() {
+        LCD.clear();
+        this.startTime = (int) System.currentTimeMillis() / 1000;
         this.navigationUnit.rotateTo(0);
+        this.followedPath.add(new Point(this.getX(), this.getY()));
     }
     
     /**
@@ -61,13 +67,14 @@ public class Rover implements ButtonListener {
     * @return void
     */
     public void mainBehaviour() {
-        this.navigationUnit.addWaypoint(100.0f,0.0f);
-        this.navigationUnit.addWaypoint(100.0f,50.0f);
-        this.navigationUnit.addWaypoint(0.0f,-50.0f);
+        int missionElapsedTime = 0;
+        int maxMissionTime = 180;
         
-        while(!this.navigationUnit.followPath()) {
-            this.avoidObstacle();
-        }
+        
+        while(missionElapsedTime < maxMissionTime) {
+            this.avoidObstacle(this.navigationUnit.travelDistance(100.0));
+            missionElapsedTime = ((int) System.currentTimeMillis() / 1000) - this.startTime;
+        } 
     }
     
     /**
@@ -76,25 +83,71 @@ public class Rover implements ButtonListener {
     * @return void
     */
     public void finishMission() {
-        this.navigationUnit.goTo(0.0f,0.0f);
+        
+        while (!this.navigationUnit.goTo(0.0f,0.0f)) {
+            
+            this.followedPath.add(new Point(this.getX(), this.getY()));
+            this.driveUnit.travel(-15);
+            
+            this.followedPath.add(new Point(this.getX(), this.getY()));
+            int[][] distances = this.sensorUnit.forwardSweep();
+            
+            double angle = (double)this.bestAngle(distances);
+            if(!this.navigationUnit.rotateBy(angle)) {
+                // bump during turn
+                this.driveUnit.travel(-20);
+                this.followedPath.add(new Point(this.getX(), this.getY()));
+            }
+            else {
+                this.driveUnit.travel(60);
+                this.followedPath.add(new Point(this.getX(), this.getY()));
+            }
+        }
+        
         
         Point[] map = this.mappingUnit.getMap();
-        // write the map file
-        this.writePointsToFile("map.csv", map);
+        Point[] traj = this.followedPath.toArray(new Point[this.followedPath.size()]);
+        // write the map and trajectory to file
+        this.writePointsToFile("map-"+this.startTime+".csv", map);
+        this.writePointsToFile("traj-"+this.startTime+".csv", traj);
+        Sound.beepSequence();
         Button.waitForAnyPress();
     }
     
-    
-    private void avoidObstacle() {
+    /**
+    *
+    *
+    *
+    *
+    */
+    private void avoidObstacle(boolean success) {
         
+        this.followedPath.add(new Point(this.getX(), this.getY()));
         // potentially add bumper obstacle
-        this.mappingUnit.addBump(this.sensorUnit.lastBump);
+        double angle = 0;
         
-        this.driveUnit.travel(-15);
+        if(!success) {
+            this.mappingUnit.addBump(this.sensorUnit.lastBump);
+            this.driveUnit.travel(-15);
+            this.followedPath.add(new Point(this.getX(), this.getY()));
+        }
+        
         int[][] distances = this.sensorUnit.forwardSweep();
         this.processScan(distances);
-        double angle = (double)this.bestAngle(distances);
         
+        
+        if(!success) {
+            angle = (double)this.bestAngle(distances);
+        }
+        else {
+            Random rnd = new Random();
+            angle = (double)(rnd.nextInt(240) - 120);
+        }
+        
+        // if the direction is obstructed, back, turn around
+        if(angle == -180) {
+            this.diveUnit.travel(-20);
+        }
         // turn towards the best direction
         if(!this.navigationUnit.rotateBy(angle)) {
             // bump during turn
@@ -102,22 +155,13 @@ public class Rover implements ButtonListener {
             this.driveUnit.travel(-20);
             return;
         }
-        // drive 60 cm
-        if(!this.navigationUnit.travelDistance(60.0)) {
-            // obstacle during avoidance travel
-            this.mappingUnit.addBump(this.sensorUnit.lastBump);
-            
-            int distanceAhead = this.sensorUnit.distanceAhead();
-            if(this.sensorUnit.lastBump == 0 && distanceAhead < 200) {
-                this.mappingUnit.addObstacle(0, (float)distanceAhead);
-            }
-            
-            this.driveUnit.travel(-20);
-            return;
-        }
     }
     
-    
+    /**
+    *
+    *
+    *
+    */
     private void writePointsToFile(String filename, Point[] pointArray) {
         
         FileOutputStream out = null;
@@ -189,7 +233,7 @@ public class Rover implements ButtonListener {
     
     public void displayUserMessage(String message) {
         LCD.clear();
-        LCD.drawString(message,0,0);
+        System.out.println(message);
     }
     
     /**
@@ -199,9 +243,6 @@ public class Rover implements ButtonListener {
     */
     public void arrivedAtWaypoint() {
         
-        int[][] distances = this.sensorUnit.forwardSweep();
-        
-        this.processScan(distances);
     }
     
     /**
@@ -212,16 +253,27 @@ public class Rover implements ButtonListener {
     */
     public int bestAngle(int[][] distances) {
         
-        int bestAngle = 0;
         int bestDistance = 0;
+
+        List<Integer> best = new ArrayList<Integer>();
+        
+        Random rnd = new Random();
         
         for(int i = 0; i < distances.length; i++) {
             if(distances[i][1] > bestDistance) {
-                bestAngle = distances[i][0];
+                // clear the list of angles
+                best.clear();
+                best.add(distances[i][0]);
                 bestDistance = distances[i][1];
             }
+            else if (distances[i][1] == bestDistance){
+                best.add(distances[i][0]);
+            }
         }
-        return bestAngle;
+        
+        // return one of the best values
+        int bestDir = best.get(rnd.nextInt(best.size()));
+        return bestDistance > 30 ? bestDir : -180;
     }
     
     /**
@@ -232,7 +284,7 @@ public class Rover implements ButtonListener {
     */
     public void processScan(int[][] distances) {
         for(int i = 0; i < distances.length; i++){
-            if(distances[i][1] < 200) {
+            if(distances[i][1] < 150) {
                 float distance = (float)distances[i][1];
                 this.mappingUnit.addObstacle(distances[i][0], (float)distances[i][1]);
             }

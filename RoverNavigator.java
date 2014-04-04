@@ -117,7 +117,7 @@ public class RoverNavigator {
     /**
     * Rotate the rover by an angle relative to its current heading
     *
-    * @param double targetAngle the absolute angle (0 is along x, +90 along y)
+    * @param double targetAngle the absolute angle (0 is along x, +90 along -y)
     * @return void
     */
     public boolean rotateBy(double offsetAngle) {
@@ -127,13 +127,13 @@ public class RoverNavigator {
         // check for obstacles as we turn
         boolean shouldStop = false;
         do {
-            Delay.msDelay(10);
+            //Delay.msDelay(10);
             shouldStop = this.instrumentsUnit.bumpersTriggered();
         } while(this.driveUnit.isMoving() && !shouldStop);
         
         // return true or false depending on the reason for stopping
         if(shouldStop) {
-            this.driveUnit.stop();
+            this.driveUnit.quickStop();
             return false;
         }
         else {
@@ -169,6 +169,15 @@ public class RoverNavigator {
     }
     
     /**
+    * Returns the pos object of the navigator
+    * 
+    * @return Pose the current pose, returned from the odometryPoseProvider
+    */
+    public Pose getPose() {
+        return this.poseProvider.getPose();
+    }
+    
+    /**
     * Displays the current state (position and heading) of the rover
     * 
     * @return String the navigator's state
@@ -194,7 +203,6 @@ public class RoverNavigator {
         //insert the point at the very end of the list
         this.path.add(newPoint);
     }
-    
     
     /**
     * Fushes the path of the rover
