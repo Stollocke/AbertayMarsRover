@@ -17,34 +17,43 @@ public class Rover implements ButtonListener {
     public RoverNavigator navigationUnit;
     public InstrumentsKit sensorUnit;
     public MapKit mappingUnit;
+    public IndicatorsKit displayUnit;
     
     private int startTime;
+    private int missionDuration;
+    
     private ArrayList<Point> followedPath;
     
     /**
     * Constructor
     * Creates the object, and sets up all units necessary for driving
     */
-    public Rover() {
-        Sound.setVolume(10);
+    public Rover(int time) {
+        Sound.setVolume(30);
         // instantiate sensor objects
         UltrasonicSensor sonic = new UltrasonicSensor(SensorPort.S4);
         TouchSensor left = new TouchSensor(SensorPort.S1);
         TouchSensor right = new TouchSensor(SensorPort.S2);
+        ColorSensor light = new ColorSensor(SensorPort.S3);
         
         Motor.A.resetTachoCount();
-        Motor.B.resetTachoCount();
+        Motor.C.resetTachoCount();
         
         // instantiate elementary rover units
+        this.displayUnit = new IndicatorsKit(light, this);
+        
         this.sensorUnit = new InstrumentsKit(Motor.B, sonic, left, right, this);
         this.driveUnit = new DifferentialPilot(4.32f, 16.8f, Motor.A, Motor.C, true);
         this.navigationUnit = new RoverNavigator(this.driveUnit, this.sensorUnit, this);
         this.mappingUnit = new MapKit(this);
+        
         this.followedPath = new ArrayList<Point>();
         
         // drive unit settings
         this.driveUnit.setTravelSpeed(15);
         this.driveUnit.setRotateSpeed(45);
+        
+        this.missionDuration = time;
         
         Button.ESCAPE.addButtonListener(this);
     }
@@ -56,6 +65,7 @@ public class Rover implements ButtonListener {
     */
     public void startMission() {
         LCD.clear();
+        
         this.startTime = (int) System.currentTimeMillis() / 1000;
         this.navigationUnit.rotateTo(0);
         this.followedPath.add(new Point(this.getX(), this.getY()));
@@ -68,10 +78,7 @@ public class Rover implements ButtonListener {
     */
     public void mainBehaviour() {
         int missionElapsedTime = 0;
-        int maxMissionTime = 180;
-        
-        
-        while(missionElapsedTime < maxMissionTime) {
+        while(missionElapsedTime < this.missionDuration) {
             this.avoidObstacle(this.navigationUnit.travelDistance(100.0));
             missionElapsedTime = ((int) System.currentTimeMillis() / 1000) - this.startTime;
         } 
@@ -83,7 +90,7 @@ public class Rover implements ButtonListener {
     * @return void
     */
     public void finishMission() {
-        
+        this.displayUnit.goingBack();
         while (!this.navigationUnit.goTo(0.0f,0.0f)) {
             
             this.followedPath.add(new Point(this.getX(), this.getY()));
@@ -99,19 +106,18 @@ public class Rover implements ButtonListener {
                 this.followedPath.add(new Point(this.getX(), this.getY()));
             }
             else {
-                this.driveUnit.travel(60);
+                this.navigationUnit.travelDistance(60);
                 this.followedPath.add(new Point(this.getX(), this.getY()));
             }
         }
-        
+        this.navigationUnit.rotateTo(0);
         
         Point[] map = this.mappingUnit.getMap();
         Point[] traj = this.followedPath.toArray(new Point[this.followedPath.size()]);
         // write the map and trajectory to file
         this.writePointsToFile("map-"+this.startTime+".csv", map);
         this.writePointsToFile("traj-"+this.startTime+".csv", traj);
-        Sound.beepSequence();
-        Button.waitForAnyPress();
+        this.displayUnit.waitForUser();
     }
     
     /**
@@ -127,29 +133,40 @@ public class Rover implements ButtonListener {
         double angle = 0;
         
         if(!success) {
+            this.displayUnit.negativeFeedback();
             this.mappingUnit.addBump(this.sensorUnit.lastBump);
             this.driveUnit.travel(-15);
             this.followedPath.add(new Point(this.getX(), this.getY()));
         }
+        else {
+            this.displayUnit.neutralFeedback();
+        }
         
         int[][] distances = this.sensorUnit.forwardSweep();
         this.processScan(distances);
+        int worstDistance = this.worstDistance(distances);
         
         
-        if(!success) {
-            angle = (double)this.bestAngle(distances);
+        if(success && worstDistance > 80) {
+            Random rnd = new Random();
+            angle = (double)(rnd.nextInt(260) - 130);
         }
         else {
-            Random rnd = new Random();
-            angle = (double)(rnd.nextInt(240) - 120);
+            angle = (double)this.bestAngle(distances);
         }
-        
         // if the direction is obstructed, back, turn around
-        if(angle == -180) {
-            this.diveUnit.travel(-20);
+        if(worstDistance < 20) {
+            this.displayUnit.negativeFeedback();
+            this.driveUnit.travel(-10);
+            this.navigationUnit.rotateBy(180);
+            return;
+        }
+        else {
+            this.displayUnit.positiveFeedback();
         }
         // turn towards the best direction
         if(!this.navigationUnit.rotateBy(angle)) {
+            this.displayUnit.negativeFeedback();
             // bump during turn
             this.mappingUnit.addBump(this.sensorUnit.lastBump);
             this.driveUnit.travel(-20);
@@ -232,7 +249,6 @@ public class Rover implements ButtonListener {
     // those methods **must** be implemented for other classes to work properly.
     
     public void displayUserMessage(String message) {
-        LCD.clear();
         System.out.println(message);
     }
     
@@ -270,10 +286,29 @@ public class Rover implements ButtonListener {
                 best.add(distances[i][0]);
             }
         }
-        
         // return one of the best values
         int bestDir = best.get(rnd.nextInt(best.size()));
-        return bestDistance > 30 ? bestDir : -180;
+        return bestDir;
+    }
+    
+    /**
+    *
+    *
+    *
+    *
+    *
+    */
+    public int worstDistance(int[][] distances) {
+        int worstDistance = 20000;
+        int worstAngle = 0;
+        for(int i = 0; i < distances.length; i++) {
+            if(distances[i][1] < worstDistance) {
+                worstDistance = distances[i][1];
+                worstAngle = distances[i][0];
+            }
+        }
+        System.out.println("w: "+worstAngle+"/"+worstDistance);
+        return worstDistance;
     }
     
     /**

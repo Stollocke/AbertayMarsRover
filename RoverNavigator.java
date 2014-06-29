@@ -86,8 +86,6 @@ public class RoverNavigator {
         boolean shouldStop = false;
         do {
             shouldStop = this.instrumentsUnit.obstacleAhead();
-            Delay.msDelay(10);
-            
         } while(this.driveUnit.isMoving() && !shouldStop);
         
         // return true or false depending on the reason for stopping
@@ -109,7 +107,7 @@ public class RoverNavigator {
     public boolean rotateTo(double targetHeading) {
         
         double currentHeading = (double) this.getHeading();
-        double neededRotation = currentHeading - targetHeading;
+        double neededRotation = (targetHeading - currentHeading)%360;
         
         return this.rotateBy(neededRotation) ? true : false;
     }
@@ -127,13 +125,13 @@ public class RoverNavigator {
         // check for obstacles as we turn
         boolean shouldStop = false;
         do {
-            //Delay.msDelay(10);
+            Delay.msDelay(10);
             shouldStop = this.instrumentsUnit.bumpersTriggered();
         } while(this.driveUnit.isMoving() && !shouldStop);
         
         // return true or false depending on the reason for stopping
         if(shouldStop) {
-            this.driveUnit.quickStop();
+            this.driveUnit.stop();
             return false;
         }
         else {
