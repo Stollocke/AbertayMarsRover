@@ -9,7 +9,7 @@ import java.util.*;
 * Abertay University - SET
 * Mars Rover Project
 * RoverNavigator class
-* 2014-03-25 Simon Stoll | Cesar Parent
+* 2014-03-25 Simon Stoll | Amy Parent
 *
 * Provides abstraction layer for moving a rover along a simple coordinates system
 * 

@@ -10,7 +10,7 @@ import lejos.util.*;
 * Abertay University - SET
 * Mars Rover Project
 * MapKit class
-* 2014-03-27 Simon Stoll | Cesar Parent
+* 2014-03-27 Simon Stoll | Amy Parent
 *
 * MapKit: Provide mapping delegate functions 
 * 
